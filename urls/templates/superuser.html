@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div>
+        <h1>URL SuperUser</h1>
+        <hr>
+    </div>
+{% for url in all_url %}
+    <div>
+        <p>URL code: <b>{{ url.code }}</b></p>
+        <p>Target url: <a href="{{ url.url }}" target="_blank" rel="noreferrer">{{ url.url }}</a></p>
+        <p>Magic Link: <a href="{{ url.magic }}" target="_blank" rel="noreferrer">click_me</a></p>
+        <hr>
+    </div>
+{% endfor %}
+{% endblock %}

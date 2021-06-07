@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div>
+        <h2>URL admin</h2>
+        <hr>
+    {% if is_deleted == "yes" %}
+        <b>Success</b><span> - This short URL is Deleted!</span>
+        <hr>
+    {% endif %}
+    </div>
+{% if is_deleted != "yes" %}
+    <div>
+        <p>URL code: <b onclick="copy_url()">click_me</b> <a href="{{ warp_url }}" target="_blank" rel="noreferrer">{{ code }}</a></p>
+        <p>Target url: <a href="{{ url }}" target="_blank" rel="noreferrer">{{ url }}</a></p>
+        <p>Magic Link: <b onclick="copy_magic()">click_me</b></p>
+        <hr>
+    </div>
+
+    <div>
+        <p>Delete this URL: <a href="{{ delete_url }}">click_me</a></p>
+        <hr>
+    </div>
+
+    <div>
+        <p>Edit target URL</p>
+        <form method="post">
+            <label for="url">URL</label>
+            <input type="url" id="url" name="url" required="required">
+            <button type="submit">Update URL!</button>
+        </form>
+        <hr>
+    </div>
+
+    <script>
+        function copy_url(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+"/{{ code }}");}
+        function copy_magic(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+location.pathname);}
+    </script>
+{% else %}
+    <script>
+        setTimeout(function(){location.href="/";}, 1500);
+    </script>
+{% endif %}
+{% endblock %}

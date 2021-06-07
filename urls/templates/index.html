@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div>
+        <h1>URL shorter</h1>
+        <hr>
+    </div>
+
+    <div>
+        <form method="post" action="/url/create">
+            <label for="url">URL</label>
+            <input type="url" id="url" name="url" required="required">
+            <button type="submit">Make it Short!</button>
+        </form>
+        <hr>
+    </div>
+{% endblock %}

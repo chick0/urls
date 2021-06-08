@@ -1,9 +1,11 @@
+from sys import exit
 from random import choice
 from base64 import b64decode
 from asyncio import sleep
 from secrets import token_bytes
 from sqlite3 import IntegrityError
 from argparse import ArgumentParser
+from configparser import ConfigParser
 
 from sanic import Sanic
 from sanic.exceptions import SanicException, Unauthorized
@@ -202,6 +204,10 @@ if __name__ == "__main__":
         description="simple URL Shorter"
     )
 
+    parser.add_argument("--reset",
+                        help="reset config file",
+                        action="store_const", const=True)
+
     parser.add_argument("--host",
                         help="set host ip address",
                         action="store", type=str, default="127.0.0.1")
@@ -221,6 +227,30 @@ if __name__ == "__main__":
                         action="store", type=str, default="")
 
     args = parser.parse_args()
+
+    if args.reset:
+        config = ConfigParser()
+        config.add_section("app")
+        config.set("app", "host", "127.0.0.1")
+        config.set("app", "port", "8000")
+        config.add_section("superuser")
+        config.set("superuser", "username", "")
+        config.set("superuser", "password", "")
+
+        config.write(open("config.ini", mode="w", encoding="utf-8"))
+        print("- config.ini reset")
+        exit(0)
+
+    try:
+        config = ConfigParser()
+        config.read("config.ini")
+
+        args.host = config.get("app", "host", fallback=args.host)
+        args.port = config.get("app", "port", fallback=args.port)
+        args.username = config.get("superuser", "username", fallback=args.username)
+        args.password = config.get("superuser", "password", fallback=args.password)
+    except (FileNotFoundError, KeyError):
+        pass
 
     app.add_task(clean_up)
     app.run(

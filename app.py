@@ -105,9 +105,6 @@ async def url_manage(request, code: str, magic: str):
 
                 code=code,
                 url=ctx[1],
-                magic=magic,
-
-                warp_url=app.url_for("warp", code=code),
                 delete_url=app.url_for("url_manage", code=code, magic=magic, delete="yes")
             )
         )
@@ -148,17 +145,17 @@ async def superuser(request):
                     "SELECT * FROM urls"
                 )
 
-                all_url = [
-                    {
-                        "code": ctx[0],
-                        "url": ctx[1],
-                        "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[2])
-                    } for ctx in await c.fetchall()
-                ]
-
                 template = env.get_template("superuser.html")
                 return html(
-                    body=template.render(all_url=all_url)
+                    body=template.render(
+                        all_url=[
+                            {
+                                "code": ctx[0],
+                                "url": ctx[1],
+                                "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[2])
+                            } for ctx in await c.fetchall()
+                        ],
+                    )
                 )
 
     return redirect(to="/")

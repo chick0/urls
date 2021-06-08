@@ -3,12 +3,17 @@
     <div>
         <h1>URL admin</h1>
         <hr>
-    {% if is_deleted == "yes" %}
+    </div>
+{% if is_deleted == "yes" %}
+    <div>
         <b>Success</b><span> - This short URL is Deleted!</span>
         <hr>
-    {% endif %}
     </div>
-{% if is_deleted != "yes" %}
+
+    <script>
+        setTimeout(function(){location.href="/";}, 1500);
+    </script>
+{% else %}
     <div>
         <p>URL code: <b onclick="copy_url()">{{ code }}</b></p>
         <p>Target url: <a href="{{ url }}" target="_blank" rel="noreferrer">{{ url }}</a></p>
@@ -34,10 +39,6 @@
     <script>
         function copy_url(){prompt("Copy this link to use this Short URL",location.protocol+'//'+location.host+"/{{ code }}");}
         function copy_magic(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+location.pathname);}
-    </script>
-{% else %}
-    <script>
-        setTimeout(function(){location.href="/";}, 1500);
     </script>
 {% endif %}
 {% endblock %}

@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--host",
                         help="set host ip address",
-                        action="store", type=str, default="127.0.0.0")
+                        action="store", type=str, default="127.0.0.1")
     parser.add_argument("--port",
                         help="set port number",
                         action="store", type=int, default=8000)

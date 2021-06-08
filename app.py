@@ -192,7 +192,13 @@ async def warp(request, code: str):
 
 
 async def clean_up():
-    while args.limit < len(cache):
+    def get_limit():
+        try:
+            return int(args.limit)
+        except ValueError:
+            return 2500  # default
+
+    while get_limit() < len(cache):
         del cache[choice(list(cache.keys()))]
 
     await sleep(60)
@@ -233,13 +239,14 @@ if __name__ == "__main__":
         config.add_section("app")
         config.set("app", "host", "127.0.0.1")
         config.set("app", "port", "8000")
+        config.add_section("cache")
+        config.set("cache", "limit", "2500")
         config.add_section("superuser")
         config.set("superuser", "username", "")
         config.set("superuser", "password", "")
 
         config.write(open("config.ini", mode="w", encoding="utf-8"))
-        print("- config.ini reset")
-        exit(0)
+        print("config.ini reset"), exit(0)
 
     try:
         config = ConfigParser()

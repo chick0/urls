@@ -98,7 +98,7 @@ async def url_manage(request, code: str, magic: str):
 
         await db.close()
 
-        template = env.get_template("url.manage.html")
+        template = env.get_template("manage.html")
         return html(
             body=template.render(
                 is_deleted=request.args.get("delete", "no"),

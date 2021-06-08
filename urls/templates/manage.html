@@ -10,7 +10,7 @@
     </div>
 {% if is_deleted != "yes" %}
     <div>
-        <p>URL code: <b onclick="copy_url()">click_me</b> <a href="{{ warp_url }}" target="_blank" rel="noreferrer">{{ code }}</a></p>
+        <p>URL code: <b onclick="copy_url()">{{ code }}</b></p>
         <p>Target url: <a href="{{ url }}" target="_blank" rel="noreferrer">{{ url }}</a></p>
         <p>Magic Link: <b onclick="copy_magic()">click_me</b></p>
         <hr>
@@ -32,7 +32,7 @@
     </div>
 
     <script>
-        function copy_url(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+"/{{ code }}");}
+        function copy_url(){prompt("Copy this link to use this Short URL",location.protocol+'//'+location.host+"/{{ code }}");}
         function copy_magic(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+location.pathname);}
     </script>
 {% else %}

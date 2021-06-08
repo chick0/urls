@@ -254,6 +254,7 @@ if __name__ == "__main__":
 
         args.host = config.get("app", "host", fallback=args.host)
         args.port = config.get("app", "port", fallback=args.port)
+        args.limit = config.get("cache", "limit", fallback=args.limit)
         args.username = config.get("superuser", "username", fallback=args.username)
         args.password = config.get("superuser", "password", fallback=args.password)
     except (FileNotFoundError, KeyError):

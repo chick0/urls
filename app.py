@@ -9,7 +9,7 @@ from configparser import ConfigParser
 
 from sanic import Sanic
 from sanic.exceptions import SanicException, Unauthorized
-from sanic.response import html, redirect
+from sanic.response import html, text, redirect
 from aiosqlite import connect
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -34,6 +34,16 @@ async def index(request):
     template = env.get_template("index.html")
     return html(
         body=template.render()
+    )
+
+
+@app.route("/robots.txt")
+async def robots(request):
+    return text(
+        body="User-agent: *\n"
+             "Allow: /$\n"
+             "Disallow: /\n"
+             "Disallow: /url"
     )
 
 

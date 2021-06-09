@@ -24,6 +24,18 @@ env = Environment(
 cache = {}
 
 
+class SuperUser:
+    def __init__(self, username: str = "", password: str = ""):
+        self._username = username.replace(" ", "")
+        self._password = password.replace(" ", "")
+
+    def is_enabled(self):
+        return not (len(self._username) == 0 or len(self._password) == 0)
+
+    def check(self, username: str = "", password: str = ""):
+        return self._username == username and self._password == password
+
+
 async def get_db():
     db = await connect("urls/urls.db")
     return db
@@ -136,9 +148,6 @@ async def url_manage(request, code: str, magic: str):
 
 @app.route("/superuser")
 async def superuser(request):
-    if len(args.username) == 0 or len(args.password) == 0:
-        return redirect(to="/")
-
     auth = request.headers.get("Authorization", None)
 
     if auth is None:
@@ -147,7 +156,7 @@ async def superuser(request):
         type_, value_ = auth.split()
         if type_.lower() == "basic":
             username, password = b64decode(value_).decode().split(":")
-            if username == args.username and password == args.password:
+            if user.is_enabled() and user.check(username=username, password=password):
                 db = await get_db()
                 cur = await db.cursor()
 
@@ -168,7 +177,7 @@ async def superuser(request):
                     )
                 )
 
-    return redirect(to="/")
+    raise Unauthorized("Auth required", scheme="Basic", realm="Auth required")
 
 
 @app.route("/<code:string>")
@@ -198,18 +207,18 @@ async def warp(request, code: str):
         raise SanicException("URL does not start with http or https!", 400)
 
 
-async def clean_up():
-    def get_limit():
+async def clean_up(limit: int or str):
+    if isinstance(limit, str):
         try:
-            return int(args.limit)
+            limit = int(limit)
         except ValueError:
-            return 2500  # default
+            limit = 2500  # default
 
-    while get_limit() < len(cache):
+    while limit < len(cache):
         del cache[choice(list(cache.keys()))]
 
     await sleep(60)
-    await clean_up()
+    await clean_up(limit)
 
 
 if __name__ == "__main__":
@@ -248,21 +257,23 @@ if __name__ == "__main__":
         config.write(open("config.ini", mode="w", encoding="utf-8"))
         print("config.ini reset"), exit(0)
 
-    try:
-        config = ConfigParser()
-        config.read("config.ini")
+    config = ConfigParser()
+    config.read("config.ini")
 
-        args.host = config.get("app", "host", fallback=args.host)
-        args.port = config.get("app", "port", fallback=args.port)
-        args.limit = config.get("cache", "limit", fallback=args.limit)
-        args.username = config.get("superuser", "username", fallback=args.username)
-        args.password = config.get("superuser", "password", fallback=args.password)
-    except (FileNotFoundError, KeyError):
-        pass
+    host = config.get("app", "host", fallback=args.host)
+    port = config.get("app", "port", fallback=args.port)
+    limit_ = config.get("cache", "limit", fallback=args.limit)
+    user = SuperUser(
+        username=config.get("superuser", "username", fallback=""),
+        password=config.get("superuser", "password", fallback="")
+    )
+    del args, config
 
-    app.add_task(clean_up)
+    app.add_task(clean_up(limit=limit_))
+    del limit_
+
     app.run(
-        host=args.host,
-        port=args.port,
+        host=host,
+        port=port,
         debug=False
     )

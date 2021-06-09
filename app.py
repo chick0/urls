@@ -232,13 +232,6 @@ if __name__ == "__main__":
                         help="set cache limit for url cache",
                         action="store", type=int, default=2500)
 
-    parser.add_argument("--username",
-                        help="set superuser username",
-                        action="store", type=str, default="")
-    parser.add_argument("--password",
-                        help="set superuser password",
-                        action="store", type=str, default="")
-
     args = parser.parse_args()
 
     if args.reset:

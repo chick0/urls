@@ -4,6 +4,7 @@ from base64 import b64decode
 from asyncio import sleep
 from secrets import token_bytes
 from sqlite3 import IntegrityError
+from sqlite3 import OperationalError
 from argparse import ArgumentParser
 from configparser import ConfigParser
 
@@ -23,6 +24,9 @@ env = Environment(
 # Short URL Cache
 cache = {}
 
+#
+db = None
+
 
 class SuperUser:
     def __init__(self, username: str = "", password: str = ""):
@@ -34,11 +38,6 @@ class SuperUser:
 
     def check(self, username: str = "", password: str = ""):
         return self._username == username and self._password == password
-
-
-async def get_db():
-    db = await connect("urls/urls.db")
-    return db
 
 
 @app.route("/")
@@ -65,7 +64,6 @@ async def url_create(request):
     if url is None:
         return redirect(to="/")
 
-    db = await get_db()
     cur = await db.cursor()
 
     async def retry():
@@ -84,7 +82,6 @@ async def url_create(request):
 
     cache[code] = url
     await db.commit()
-    await db.close()
 
     return redirect(
         to=app.url_for("url_manage", code=code, magic=magic),
@@ -97,7 +94,6 @@ async def url_create(request):
 
 @app.route("/url/<code:string>/<magic:string>", methods=['GET', 'POST'])
 async def url_manage(request, code: str, magic: str):
-    db = await get_db()
     cur = await db.cursor()
 
     c = await cur.execute(
@@ -119,8 +115,6 @@ async def url_manage(request, code: str, magic: str):
             )
             await db.commit()
 
-        await db.close()
-
         template = env.get_template("manage.html")
         return html(
             body=template.render(
@@ -141,7 +135,6 @@ async def url_manage(request, code: str, magic: str):
             await db.commit()
             cache[code] = new_url
 
-        await db.close()
         return redirect(
             to=app.url_for("url_manage", code=code, magic=magic)
         )
@@ -158,7 +151,6 @@ async def superuser(request):
         if type_.lower() == "basic":
             username, password = b64decode(value_).decode().split(":")
             if user.is_enabled() and user.check(username=username, password=password):
-                db = await get_db()
                 cur = await db.cursor()
 
                 c = await cur.execute(
@@ -184,7 +176,6 @@ async def superuser(request):
 @app.route("/<code:string>")
 async def warp(request, code: str):
     if code not in cache.keys():
-        db = await get_db()
         cur = await db.cursor()
 
         c = await cur.execute(
@@ -192,7 +183,6 @@ async def warp(request, code: str):
             (code,)
         )
         ctx = await c.fetchone()
-        await db.close()
 
         if ctx is None:
             raise SanicException("URL Not Found", 404)
@@ -220,6 +210,17 @@ async def clean_up(limit: int or str):
 
     await sleep(60)
     await clean_up(limit)
+
+
+async def db_setup():
+    global db
+    db = await connect("urls/urls.db")
+
+
+async def db_is_busy(request, exception):
+    return html(
+        """Database is busy. Try again in 1 minute."""
+    )
 
 
 if __name__ == "__main__":

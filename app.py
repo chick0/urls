@@ -66,8 +66,8 @@ async def url_create(request):
 
     cur = await db.cursor()
 
-    async def retry():
-        code_ = token_bytes(3).hex()
+    async def retry(length: int = 2):
+        code_ = token_bytes(length).hex()
         try:
             await cur.execute(
                 "INSERT INTO urls(code, url, magic) VALUES(?, ?, ?)",
@@ -75,7 +75,8 @@ async def url_create(request):
             )
             return code_
         except IntegrityError:
-            return await retry()
+            length += 1
+            return await retry(length)
 
     magic = token_bytes(128).hex()
     code = await retry()
@@ -271,8 +272,11 @@ if __name__ == "__main__":
     )
     del args, config
 
+    app.add_task(db_setup)
     app.add_task(clean_up(limit=limit_))
     del limit_
+
+    app.error_handler.add(OperationalError, db_is_busy)
 
     app.run(
         host=host,

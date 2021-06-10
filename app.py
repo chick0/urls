@@ -82,6 +82,7 @@ async def url_create(request):
     magic = token_bytes(128).hex()
     code = await retry()
 
+    cache[code] = url
     await db.commit()
     await db.close()
 

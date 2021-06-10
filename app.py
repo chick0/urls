@@ -219,8 +219,9 @@ async def db_setup():
 
 
 async def db_is_busy(request, exception):
-    return html(
-        """Database is busy. Try again in 1 minute."""
+    raise SanicException(
+        "Database is busy. Try again in 3 minute.",
+        status_code=503, quiet=True
     )
 
 

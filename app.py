@@ -106,6 +106,16 @@ async def url_manage(request, code: str, magic: str):
         return redirect(to="/")
 
     if request.method == "GET":
+        if request.args.get("magicC", "no") == "yes":
+            new_magic = token_bytes(128).hex()
+            await cur.execute(
+                "UPDATE urls SET magic=? WHERE code=? AND magic=?",
+                (new_magic, code, magic)
+            )
+            await getattr(db, "commit")()
+
+            return redirect(to=app.url_for("url_manage", code=code, magic=new_magic))
+
         if request.args.get("delete", "no") == "yes":
             if code in cache.keys():
                 del cache[code]

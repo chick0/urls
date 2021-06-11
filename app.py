@@ -120,10 +120,8 @@ async def url_manage(request, code: str, magic: str):
         return html(
             body=template.render(
                 is_deleted=request.args.get("delete", "no"),
-
                 code=code,
                 url=ctx[1],
-                delete_url=app.url_for("url_manage", code=code, magic=magic, delete="yes")
             )
         )
     elif request.method == "POST":

@@ -64,7 +64,7 @@ async def url_create(request):
     if url is None:
         return redirect(to="/")
 
-    cur = await db.cursor()
+    cur = await getattr(db, "cursor")()
 
     async def retry(length: int = 2):
         code_ = token_bytes(length).hex()
@@ -82,7 +82,7 @@ async def url_create(request):
     code = await retry()
 
     cache[code] = url
-    await db.commit()
+    await getattr(db, "commit")()
 
     return redirect(
         to=app.url_for("url_manage", code=code, magic=magic),
@@ -95,7 +95,7 @@ async def url_create(request):
 
 @app.route("/url/<code:string>/<magic:string>", methods=['GET', 'POST'])
 async def url_manage(request, code: str, magic: str):
-    cur = await db.cursor()
+    cur = await getattr(db, "cursor")()
 
     c = await cur.execute(
         "SELECT * FROM urls WHERE code=? AND magic=?",
@@ -114,7 +114,7 @@ async def url_manage(request, code: str, magic: str):
                 "DELETE FROM urls WHERE code=? AND magic=?",
                 (code, magic)
             )
-            await db.commit()
+            await getattr(db, "commit")()
 
         template = env.get_template("manage.html")
         return html(
@@ -133,7 +133,7 @@ async def url_manage(request, code: str, magic: str):
                 "UPDATE urls SET url=? WHERE code=? AND magic=?",
                 (new_url, code, magic)
             )
-            await db.commit()
+            await getattr(db, "commit")()
             cache[code] = new_url
 
         return redirect(
@@ -152,7 +152,7 @@ async def superuser(request):
         if type_.lower() == "basic":
             username, password = b64decode(value_).decode().split(":")
             if user.is_enabled() and user.check(username=username, password=password):
-                cur = await db.cursor()
+                cur = await getattr(db, "cursor")()
 
                 c = await cur.execute(
                     "SELECT * FROM urls"
@@ -177,7 +177,7 @@ async def superuser(request):
 @app.route("/<code:string>")
 async def warp(request, code: str):
     if code not in cache.keys():
-        cur = await db.cursor()
+        cur = await getattr(db, "cursor")()
 
         c = await cur.execute(
             "SELECT url FROM urls WHERE code=?",

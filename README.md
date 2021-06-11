@@ -1,2 +1,2 @@
 # urls
-simple url shorter with sqlite and sanic
+Simple URL Shorter with SQLite and [Sanic](https://sanicframework.org/)

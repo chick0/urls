@@ -10,7 +10,7 @@ from configparser import ConfigParser
 
 from sanic import Sanic
 from sanic.exceptions import SanicException, Unauthorized
-from sanic.response import html, text, redirect
+from sanic.response import html, text, json, redirect
 from aiosqlite import connect
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -84,13 +84,16 @@ async def url_create(request):
     cache[code] = url
     await getattr(db, "commit")()
 
-    return redirect(
-        to=app.url_for("url_manage", code=code, magic=magic),
-        headers={
-            "code": code,
-            "magic": magic
-        }
-    )
+    if request.headers.get("User-Agent", "").startswith("curl"):
+        return json(
+            body={
+                "code": code,
+                "magic": magic
+            },
+            status=201
+        )
+
+    return redirect(to=app.url_for("url_manage", code=code, magic=magic))
 
 
 @app.route("/url/<code:string>/<magic:string>", methods=['GET', 'POST'])

@@ -182,10 +182,14 @@ async def superuser(request):
 
         superuser_db = await connect("urls/urls.db")
 
-        if request.args.get("delete", None) is not None:
+        code = request.args.get("delete", None)
+        if code is not None:
+            if code in cache.keys():
+                del cache[code]
+
             await superuser_db.execute(
                 "DELETE FROM urls WHERE code=?",
-                (request.args.get("delete"),)
+                (code,)
             )
             await superuser_db.commit()
             await superuser_db.close()

@@ -169,33 +169,46 @@ async def url_manage(request, code: str, magic: str):
 
 @app.route("/superuser")
 async def superuser(request):
-    auth = request.headers.get("Authorization", None)
+    if user.parse(request.headers.get("Authorization", None)):
+        if request.args.get("db", "") == "connect":
+            if getattr(db, "_connection") is None:
+                await db_setup()
+            return redirect(to=app.url_for("superuser"))
 
-    if auth is None:
-        raise Unauthorized("Auth required", scheme="Basic", realm="Auth required")
-    else:
-        type_, value_ = auth.split()
-        if type_.lower() == "basic":
-            username, password = b64decode(value_).decode().split(":")
-            if user.is_enabled() and user.check(username=username, password=password):
-                cur = await getattr(db, "cursor")()
+        if request.args.get("db", "") == "close":
+            if getattr(db, "_connection") is not None:
+                await getattr(db, "close")()
+            return redirect(to=app.url_for("superuser"))
 
-                c = await cur.execute(
-                    "SELECT * FROM urls"
-                )
+        superuser_db = await connect("urls/urls.db")
 
-                template = env.get_template("superuser.html")
-                return html(
-                    body=template.render(
-                        all_url=[
-                            {
-                                "code": ctx[0],
-                                "url": ctx[1],
-                                "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[2])
-                            } for ctx in await c.fetchall()
-                        ],
-                    )
-                )
+        if request.args.get("delete", None) is not None:
+            await superuser_db.execute(
+                "DELETE FROM urls WHERE code=?",
+                (request.args.get("delete"),)
+            )
+            await superuser_db.commit()
+            await superuser_db.close()
+            return redirect(to=app.url_for("superuser"))
+
+        cur = await superuser_db.cursor()
+        c = await cur.execute(
+            "SELECT * FROM urls"
+        )
+
+        template = env.get_template("superuser.html")
+        return html(
+            body=template.render(
+                db_status="online" if getattr(db, "_connection") is not None else "offline",
+                all_url=[
+                    {
+                        "code": ctx[0],
+                        "url": ctx[1],
+                        "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[2])
+                    } for ctx in await c.fetchall()
+                ]
+            )
+        )
 
     raise Unauthorized("Auth required", scheme="Basic", realm="Auth required")
 
@@ -304,6 +317,7 @@ if __name__ == "__main__":
     del limit_
 
     app.error_handler.add(OperationalError, db_is_busy)
+    app.error_handler.add(ValueError, db_is_busy)
 
     app.run(
         host=host,

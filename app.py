@@ -39,6 +39,21 @@ class SuperUser:
     def check(self, username: str = "", password: str = ""):
         return self._username == username and self._password == password
 
+    def parse(self, authorization):
+        if authorization is None:
+            raise Unauthorized(
+                "Auth required",
+                scheme="Basic",
+                realm="Auth required"
+            )
+        else:
+            method, value_ = authorization.split()
+            if method.lower() == "basic":
+                username, password = b64decode(value_).decode().split(":")
+                return self.is_enabled() and self.check(username=username, password=password)
+
+        return False
+
 
 @app.route("/")
 async def index(request):

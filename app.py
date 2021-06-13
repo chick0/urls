@@ -180,7 +180,9 @@ async def superuser(request):
                 await getattr(db, "close")()
             return redirect(to=app.url_for("superuser"))
 
-        superuser_db = await connect("urls/urls.db")
+        superuser_db = db
+        if getattr(db, "_connection") is None:
+            superuser_db = await connect("urls/urls.db")
 
         code = request.args.get("delete", None)
         if code is not None:

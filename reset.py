@@ -5,7 +5,7 @@ db = connect("urls/urls.db")
 query_list = [
     "DROP TABLE IF EXISTS `urls`;",
     "CREATE TABLE urls ("
-    "  code  varchar(12),"
+    "  code  varchar(20),"
     "  url   varchar(2000),"
     "  magic char(256)"
     ");",

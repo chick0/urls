@@ -9,10 +9,16 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 
 from sanic import Sanic
-from sanic.exceptions import SanicException, Unauthorized
-from sanic.response import html, text, json, redirect
+from sanic.exceptions import abort
+from sanic.exceptions import Unauthorized
+from sanic.response import html
+from sanic.response import text
+from sanic.response import json
+from sanic.response import redirect
 from aiosqlite import connect
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment
+from jinja2 import PackageLoader
+from jinja2 import select_autoescape
 
 
 app = Sanic(__name__)
@@ -231,7 +237,7 @@ async def warp(request, code: str):
         ctx = await c.fetchone()
 
         if ctx is None:
-            raise SanicException("URL Not Found", 404)
+            abort(404)
 
         url = ctx[0]
         cache[code] = url
@@ -241,7 +247,7 @@ async def warp(request, code: str):
     if url.startswith("http://") or url.startswith("https://"):
         return redirect(to=url)
     else:
-        raise SanicException("URL does not start with http or https!", 400)
+        raise abort(400, "Error: URL does not start with http:// or https://")
 
 
 async def clean_up(limit: int or str):
@@ -264,10 +270,7 @@ async def db_setup():
 
 
 async def db_is_busy(request, exception):
-    raise SanicException(
-        "Database is busy. Try again in 3 minute.",
-        status_code=503, quiet=True
-    )
+    abort(503, "Database is busy. Try again in 3 minute.")
 
 
 if __name__ == "__main__":

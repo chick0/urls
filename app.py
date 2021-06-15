@@ -208,7 +208,6 @@ async def superuser(request):
                 (code,)
             )
             await superuser_db.commit()
-            await superuser_db.close()
             return redirect(to=app.url_for("superuser"))
 
         cur = await superuser_db.cursor()

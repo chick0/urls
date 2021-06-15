@@ -87,7 +87,10 @@ async def url_create(request):
 
     cur = await getattr(db, "cursor")()
 
-    async def retry(length: int = 2):
+    async def retry(length: int = 2, try_count: int = 0):
+        if length > 20:
+            abort(500, "Fail to generate URL Code")
+
         code_ = token_bytes(length).hex()
         try:
             await cur.execute(
@@ -96,8 +99,13 @@ async def url_create(request):
             )
             return code_
         except IntegrityError:
+            pass
+
+        try_count += 1
+        if try_count % 2 == 0:
             length += 1
-            return await retry(length)
+
+        return await retry(length, try_count)
 
     magic = token_bytes(128).hex()
     code = await retry()

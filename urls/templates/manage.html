@@ -1,12 +1,12 @@
 {% extends 'layout.html' %}
 {% block content %}
     <div>
-        <h1>URL admin</h1>
+        <h1><a href="/"><b>URL</b></a> admin</h1>
         <hr>
     </div>
 {% if is_deleted == "yes" %}
     <div>
-        <b>Success</b><span> - This short URL is Deleted!</span>
+        <b>Success</b><span> - This short URL is <b>Deleted</b>! Redirect in 1 second...</span>
         <hr>
     </div>
 
@@ -15,21 +15,16 @@
     </script>
 {% else %}
     <div>
-        <p>URL code: <b onclick="copy_url()">{{ code }}</b></p>
+        <p>URL code: <a href="javascript:copy_url()"><b>{{ code }}</b></a></p>
         <p>Target url: <a href="{{ url }}" target="_blank" rel="noreferrer">{{ url }}</a></p>
-        <p>Magic Link: <b onclick="copy_magic()">click_me</b> <a href="?magicC=yes">change_it</a></p>
+        <p>Magic Link: <a href="javascript:copy_magic()"><b>Copy</b></a>/<a href="?magicC=yes"><b>Change</b></a>/<a href="?delete=yes"><b>Delete</b></a></p>
         <hr>
     </div>
 
     <div>
-        <p>Delete this URL: <a href="?delete=yes">click_me</a></p>
-        <hr>
-    </div>
-
-    <div>
-        <p>Edit target URL</p>
+        <p><b>Edit</b> <u>Target URL</u></p>
         <form method="post">
-            <label for="url">URL</label>
+            <label for="url">- <b>New</b> URL : </label>
             <input type="url" id="url" name="url" required="required">
             <button type="submit">Update URL!</button>
         </form>
@@ -37,8 +32,8 @@
     </div>
 
     <script>
-        function copy_url(){prompt("Copy this link to use this Short URL",location.protocol+'//'+location.host+"/{{ code }}");}
-        function copy_magic(){prompt("Copy this magic link to manage this URL",location.protocol+'//'+location.host+location.pathname);}
+        function copy_url(){prompt("Copy this link to use this 'Short URL'",location.protocol+'//'+location.host+"/{{ code }}");}
+        function copy_magic(){prompt("Copy this 'Magic Link' to manage this URL",location.protocol+'//'+location.host+location.pathname);}
     </script>
 {% endif %}
 {% endblock %}

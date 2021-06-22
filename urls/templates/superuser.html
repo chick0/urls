@@ -1,20 +1,19 @@
 {% extends 'layout.html' %}
 {% block content %}
     <div>
-        <h1>URL SuperUser</h1>
+        <h1><a href="/"><b>URL</b></a> SuperUser</h1>
         <hr>
     </div>
 
     <div>
-        <p>Database Status: <b>{{ db_status }}</b></p>
-        <a href="?db=connect">Connect</a> <a href="?db=close">Close</a>
+        <p>Database Status: <a href="{{ db_url }}"><b>{{ db_status }}</b></a></p>
         <hr>
     </div>
 {% for url in all_url %}
     <div>
         <p>URL code: <b>{{ url.code }}</b></p>
         <p>Target url: <a href="{{ url.url }}" target="_blank" rel="noreferrer">{{ url.url }}</a></p>
-        <p>Magic Link: <a href="{{ url.magic }}" target="_blank" rel="noreferrer">click_me</a> <a href="?delete={{ url.code }}">delete</a></p>
+        <p>Magic Link: <a href="{{ url.magic }}" target="_blank" rel="noreferrer">open</a> <a href="?delete={{ url.code }}"><b>delete</b></a></p>
         <hr>
     </div>
 {% endfor %}

@@ -219,6 +219,7 @@ async def superuser(request):
         return html(
             body=template.render(
                 db_status="online" if getattr(db, "_connection") is not None else "offline",
+                db_url="?db=close" if getattr(db, "_connection") is not None else "?db=connect",
                 all_url=[
                     {
                         "code": ctx[0],

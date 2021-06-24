@@ -1,6 +1,7 @@
 from sys import exit
 from random import choice
 from base64 import b64decode
+from urllib.parse import urlparse
 from asyncio import sleep
 from secrets import token_bytes
 from sqlite3 import IntegrityError
@@ -61,6 +62,27 @@ class SuperUser:
         return False
 
 
+class UrlVerifyFail(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+def url_verifier(url: str) -> str:
+    if len(url) > 2000:
+        raise UrlVerifyFail(message="URL is too long. Please try again less than 2000 characters.")
+
+    url = urlparse(url=url)
+    allow_schemes = [
+        "http",
+        "https",
+    ]
+
+    if url.scheme not in allow_schemes:
+        raise UrlVerifyFail(message=f"'{url.scheme}' is an unacceptable scheme.")
+
+    return url.geturl()
+
+
 @app.route("/")
 async def index(request):
     template = env.get_template("index.html")
@@ -81,7 +103,7 @@ async def robots(request):
 
 @app.route("/url/create", methods=['POST'])
 async def url_create(request):
-    url = request.form.get("url", None)
+    url = url_verifier(url=request.form.get("url", ""))
     if url is None:
         return redirect(to="/")
 
@@ -167,14 +189,17 @@ async def url_manage(request, code: str, magic: str):
             )
         )
     elif request.method == "POST":
-        new_url = request.form.get("url", None)
-        if new_url is not None:
+        try:
+            new_url = url_verifier(url=request.form.get("url", ""))
+
             await cur.execute(
                 "UPDATE urls SET url=? WHERE code=? AND magic=?",
                 (new_url, code, magic)
             )
             await getattr(db, "commit")()
             cache[code] = new_url
+        except UrlVerifyFail:
+            pass
 
         return redirect(
             to=app.url_for("url_manage", code=code, magic=magic)
@@ -255,7 +280,7 @@ async def warp(request, code: str):
     if url.startswith("http://") or url.startswith("https://"):
         return redirect(to=url)
     else:
-        raise abort(400, "Error: URL does not start with http:// or https://")
+        abort(400, "Error: URL does not start with http:// or https://")
 
 
 async def clean_up(limit: int or str):
@@ -279,6 +304,10 @@ async def db_setup():
 
 async def db_is_busy(request, exception):
     abort(503, "Database is busy. Try again in 3 minute.")
+
+
+async def url_verifier_fail(request, exception):
+    abort(400, message=exception)
 
 
 if __name__ == "__main__":
@@ -335,6 +364,7 @@ if __name__ == "__main__":
 
     app.error_handler.add(OperationalError, db_is_busy)
     app.error_handler.add(ValueError, db_is_busy)
+    app.error_handler.add(UrlVerifyFail, url_verifier_fail)
 
     app.run(
         host=host,

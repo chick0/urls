@@ -7,6 +7,7 @@ query_list = [
     "CREATE TABLE urls ("
     "  code  varchar(20),"
     "  url   varchar(2000),"
+    "  used  int(11),"
     "  magic char(256)"
     ");",
     "CREATE UNIQUE INDEX urls_code_U ON urls(code);"

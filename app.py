@@ -10,8 +10,8 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 
 from sanic import Sanic
-from sanic.exceptions import abort
 from sanic.exceptions import Unauthorized
+from sanic.exceptions import SanicException
 from sanic.response import html
 from sanic.response import text
 from sanic.response import json
@@ -111,7 +111,10 @@ async def url_create(request):
 
     async def retry(length: int = 2, try_count: int = 0):
         if length > 20:
-            abort(500, "Fail to generate URL Code")
+            raise SanicException(
+                "Fail to generate URL Code",
+                status_code=500, quiet=True
+            )
 
         code_ = token_bytes(length).hex()
         try:
@@ -260,6 +263,11 @@ async def superuser(request):
 
 @app.route("/<code:string>")
 async def warp(request, code: str):
+    if code in ['favicon.ico']:
+        raise SanicException(
+            status_code=404, quiet=True
+        )
+
     if code not in cache.keys():
         cur = await getattr(db, "cursor")()
 
@@ -270,7 +278,10 @@ async def warp(request, code: str):
         ctx = await c.fetchone()
 
         if ctx is None:
-            abort(404)
+            raise SanicException(
+                "Short URL Not Found.",
+                status_code=404, quiet=True
+            )
 
         url = ctx[0]
         cache[code] = url
@@ -280,7 +291,10 @@ async def warp(request, code: str):
     if url.startswith("http://") or url.startswith("https://"):
         return redirect(to=url)
     else:
-        abort(400, "Error: URL does not start with http:// or https://")
+        raise SanicException(
+            "Error: URL does not start with http:// or https://",
+            status_code=400, quiet=True
+        )
 
 
 async def clean_up(limit: int or str):
@@ -303,11 +317,17 @@ async def db_setup():
 
 
 async def db_is_busy(request, exception):
-    abort(503, "Database is busy. Try again in 3 minute.")
+    raise SanicException(
+        "Database is busy. Try again in 3 minute.",
+        status_code=503, quiet=True
+    )
 
 
 async def url_verifier_fail(request, exception):
-    abort(400, message=exception)
+    raise SanicException(
+        exception,
+        status_code=400, quiet=True
+    )
 
 
 if __name__ == "__main__":

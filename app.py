@@ -30,8 +30,9 @@ env = Environment(
 
 # Short URL Cache
 cache = {}
+used = []
 
-#
+# SQLite Object
 db = None
 
 
@@ -119,8 +120,8 @@ async def url_create(request):
         code_ = token_bytes(length).hex()
         try:
             await cur.execute(
-                "INSERT INTO urls(code, url, magic) VALUES(?, ?, ?)",
-                (code_, url, magic)
+                "INSERT INTO urls(code, url, used, magic) VALUES(?, ?, ?, ?)",
+                (code_, url, 0, magic)
             )
             return code_
         except IntegrityError:
@@ -155,7 +156,7 @@ async def url_manage(request, code: str, magic: str):
     cur = await getattr(db, "cursor")()
 
     c = await cur.execute(
-        "SELECT * FROM urls WHERE code=? AND magic=?",
+        "SELECT url,used FROM urls WHERE code=? AND magic=?",
         (code, magic)
     )
     ctx = await c.fetchone()
@@ -188,7 +189,8 @@ async def url_manage(request, code: str, magic: str):
             body=template.render(
                 is_deleted=request.args.get("delete", "no"),
                 code=code,
-                url=ctx[1],
+                url=ctx[0],
+                used=ctx[1]
             )
         )
     elif request.method == "POST":
@@ -272,7 +274,7 @@ async def warp(request, code: str):
         cur = await getattr(db, "cursor")()
 
         c = await cur.execute(
-            "SELECT url FROM urls WHERE code=?",
+            "SELECT url, used FROM urls WHERE code=?",
             (code,)
         )
         ctx = await c.fetchone()
@@ -289,6 +291,7 @@ async def warp(request, code: str):
         url = cache[code]
 
     if url.startswith("http://") or url.startswith("https://"):
+        used.append(code)
         return redirect(to=url)
     else:
         raise SanicException(
@@ -309,6 +312,29 @@ async def clean_up(limit: int or str):
 
     await sleep(60)
     await clean_up(limit)
+
+
+async def used_update():
+    try:
+        while True:
+            code = used.pop()
+            cur = await getattr(db, "cursor")()
+            c = await cur.execute(
+                "SELECT used FROM urls WHERE code=?",
+                (code,)
+            )
+            ctx = await c.fetchone()
+            if ctx is not None:
+                await cur.execute(
+                    "UPDATE urls SET used=? WHERE code=?",
+                    (ctx[0] + 1, code)
+                )
+                await getattr(db, "commit")()
+    except IndexError:
+        pass
+
+    await sleep(5)
+    await used_update()
 
 
 async def db_setup():
@@ -380,6 +406,7 @@ if __name__ == "__main__":
 
     app.add_task(db_setup)
     app.add_task(clean_up(limit=limit_))
+    app.add_task(used_update)
     del limit_
 
     app.error_handler.add(OperationalError, db_is_busy)

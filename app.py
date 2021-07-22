@@ -254,7 +254,7 @@ async def superuser(request):
                     {
                         "code": ctx[0],
                         "url": ctx[1],
-                        "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[2])
+                        "magic": app.url_for("url_manage", code=ctx[0], magic=ctx[3])
                     } for ctx in await c.fetchall()
                 ]
             )

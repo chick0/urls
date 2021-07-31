@@ -4,20 +4,11 @@
         <h1><a href="/"><b>URL</b></a> admin</h1>
         <hr>
     </div>
-{% if is_deleted == "yes" %}
-    <div>
-        <b>Success</b><span> - This short URL is <b>Deleted</b>! Redirect in 1 second...</span>
-        <hr>
-    </div>
 
-    <script>
-        setTimeout(function(){location.href="/";}, 1500);
-    </script>
-{% else %}
     <div>
         <p>URL code: <a href="javascript:copy_url()"><b>{{ code }}</b></a></p>
         <p>Target url: <a href="{{ url }}" target="_blank" rel="noreferrer">{{ url }}</a></p>
-        <p>Magic Link: <a href="javascript:copy_magic()"><b>Copy</b></a>/<a href="?magicC=yes"><b>Change</b></a>/<a href="?delete=yes"><b>Delete</b></a></p>
+        <p>Magic Link: <a href="javascript:copy_magic()"><b>Copy</b></a>/<a href="{{ update }}"><b>Change</b></a>/<a href="{{ delete }}"><b>Delete</b></a></p>
         <hr>
         <p>This URL has been used <b>{{ used }}</b> times.</p>
         <hr>
@@ -37,5 +28,4 @@
         function copy_url(){prompt("Copy this link to use this 'Short URL'",location.protocol+'//'+location.host+"/{{ code }}");}
         function copy_magic(){prompt("Copy this 'Magic Link' to manage this URL",location.protocol+'//'+location.host+location.pathname);}
     </script>
-{% endif %}
 {% endblock %}

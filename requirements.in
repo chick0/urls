@@ -1,3 +1,8 @@
-sanic
-jinja2
-aiosqlite
+flask
+flask-migrate
+flask-sqlalchemy
+
+mysqlclient
+
+uvicorn
+uvloop

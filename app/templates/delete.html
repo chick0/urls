@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div>
+        <h1><a href="/"><b>URL</b></a> admin</h1>
+        <hr>
+    </div>
+
+    <div>
+        <p>This short URL is <b>Deleted</b>! Redirect in 1 second...</p>
+        <hr>
+    </div>
+
+    <script>
+        setTimeout(function(){location.href="/";}, 1500);
+    </script>
+{% endblock %}

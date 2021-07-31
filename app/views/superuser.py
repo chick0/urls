@@ -52,7 +52,7 @@ def dashboard():
     if auth_result is not None:
         return auth_result
 
-    url = Url.query.all()
+    url = Url.query.order_by(Url.date).all()
     return render_template(
         "superuser.html",
         all_url=url

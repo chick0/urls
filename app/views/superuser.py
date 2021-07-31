@@ -61,6 +61,10 @@ def dashboard():
 
 @bp.get("/delete")
 def delete():
+    auth_result = authorization()
+    if auth_result is not None:
+        return auth_result
+
     code = request.args.get("code", None)
     if code is not None:
         url = Url.query.filter_by(

@@ -10,7 +10,7 @@ def loop(app):
         with app.app_context():
             for target in Used.query.filter_by(
                 used=False
-            ).limit(30).all():
+            ).limit(200).all():
                 url = Url.query.filter_by(
                     code=target.code
                 ).first()

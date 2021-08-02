@@ -12,6 +12,7 @@ from . import warp
 from app import db
 from app.models import Url
 from app.url import url_verifier
+from app.custom_error import FailToCreate
 
 bp = Blueprint(
     name="url",
@@ -50,6 +51,6 @@ def create():
             url.code = token_bytes(length).hex()
 
     if success is False:
-        return "Fail to create short url", 500
+        raise FailToCreate
 
     return redirect(url_for("url.dashboard.show", code=url.code, magic=url.magic))

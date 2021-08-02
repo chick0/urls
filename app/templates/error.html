@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div>
+        <h1><a href="/"><b>URL</b></a> shorter</h1>
+        <hr>
+    </div>
+
+    <div>
+        <p>{{ error_message }}</p>
+        <hr>
+    </div>
+
+    <script>
+        setTimeout(function(){history.back();}, 2000);
+    </script>
+{% endblock %}

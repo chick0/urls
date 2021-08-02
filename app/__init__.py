@@ -29,4 +29,9 @@ def create_app():
     from . import task
     Thread(target=task.core, args=(app,), daemon=True).start()
 
+    # register error handler
+    from .error import error_map
+    for code in error_map:
+        app.register_error_handler(code, error_map[code])
+
     return app

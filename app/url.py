@@ -1,9 +1,6 @@
 from urllib.parse import urlparse
 
-
-class UrlVerifyFail(Exception):
-    def __init__(self, message):
-        super().__init__(message)
+from app.custom_error import UrlVerifyFail
 
 
 def url_verifier(url: str) -> str:

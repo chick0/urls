@@ -1,6 +1,7 @@
 from threading import Thread
 
 from flask import Blueprint
+from flask import abort
 from flask import redirect
 from flask import current_app
 
@@ -31,7 +32,7 @@ def go(code: str):
         code=code
     ).first()
     if url is None:
-        return "not found", 404
+        return abort(404)
 
     if url.url.startswith("http://") or url.url.startswith("https://"):
         Thread(target=add_used, args=(current_app.app_context, url.code,)).start()
